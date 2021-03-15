@@ -40,29 +40,7 @@ namespace PeopleApplication.Controllers
             var result = await new AuthorizationCodeMvcApp(this, new AppFlowMetadata()).
                 AuthorizeAsync(cancellationToken);
 
-            if (result.Credential != null)
-            {
-                var peopleService = new PeopleServiceService(new BaseClientService.Initializer
-                {
-                    HttpClientInitializer = result.Credential,
-                    ApplicationName = "Yashar App"
-                });
-
-                PeopleResource.ConnectionsResource.ListRequest peopleRequest =
-                    peopleService.People.Connections.List("people/me");
-                peopleRequest.PersonFields = "addresses,ageRanges,biographies,birthdays,calendarUrls," +
-                    "clientData,coverPhotos,emailAddresses,events,externalIds,genders,imClients," +
-                    "interests,locales,locations,memberships,metadata,miscKeywords,names,nicknames," +
-                    "occupations,organizations,phoneNumbers,photos,relations,sipAddresses,skills,urls,userDefined";
-                ListConnectionsResponse connectionsResponse = peopleRequest.Execute();
-                IList<Person> connections = connectionsResponse.Connections;
-
-                return View();
-            }
-            else
-            {
-                return new RedirectResult(result.RedirectUri);
-            }
+            return new RedirectResult(result.RedirectUri);
         }
     }
 }

@@ -7,6 +7,7 @@ using Google.Apis.Services;
 using PeopleApplication.Service;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Mvc;
@@ -24,6 +25,7 @@ namespace PeopleApplication.Controllers
             get { return new AppFlowMetadata(); }
         }
 
+        [AsyncTimeout(30000)]
         public override async Task<ActionResult> IndexAsync(AuthorizationCodeResponseUrl authorizationCode, CancellationToken taskCancellationToken)
         {
             if (string.IsNullOrEmpty(authorizationCode.Code))
@@ -51,31 +53,47 @@ namespace PeopleApplication.Controllers
                 var peopleService = new PeopleServiceService(new BaseClientService.Initializer
                 {
                     HttpClientInitializer = credential,
-                    ApplicationName = "Yashar App"
+                    ApplicationName = "< YOUR APP NAME >",
+
                 });
+
+                #region Contacts
 
                 PeopleResource.ConnectionsResource.ListRequest peopleRequest =
                     peopleService.People.Connections.List("people/me");
-                
+
                 peopleRequest.PersonFields = "addresses,ageRanges,biographies,birthdays,calendarUrls," +
                     "clientData,coverPhotos,emailAddresses,events,externalIds,genders,imClients," +
                     "interests,locales,locations,memberships,metadata,miscKeywords,names,nicknames," +
                     "occupations,organizations,phoneNumbers,photos,relations,sipAddresses,skills,urls,userDefined";
 
-                //peopleRequest.SortOrder = (PeopleResource.ConnectionsResource.ListRequest.SortOrderEnum)1;
+                peopleRequest.SortOrder = PeopleResource.ConnectionsResource.ListRequest.SortOrderEnum.LASTMODIFIEDDESCENDING;
+                peopleRequest.PageSize = 1000;
 
                 ListConnectionsResponse connectionsResponse = peopleRequest.Execute();
 
-                IList<Person> connections = connectionsResponse.Connections;
+                List<Person> connections = connectionsResponse.Connections as List<Person>;
 
-                return View(connections);
+                // get all pages
+                while (!string.IsNullOrEmpty(connectionsResponse.NextPageToken))
+                {
+                    peopleRequest.PageToken = connectionsResponse.NextPageToken;
+                    connectionsResponse = peopleRequest.Execute();
+                    connections.AddRange(connectionsResponse.Connections);
+                }
+
+                #endregion
+
+                var model = connections.Where(x => x.EmailAddresses != null && x.EmailAddresses.Any());
+
+                return View(model);
             }
             catch (Exception exp)
             {
                 Logger.Info("Received an error. The response is: {0}", exp.Message);
 
                 return View("Error");
-            }            
+            }
         }
 
         protected override ActionResult OnTokenError(TokenErrorResponse errorResponse)

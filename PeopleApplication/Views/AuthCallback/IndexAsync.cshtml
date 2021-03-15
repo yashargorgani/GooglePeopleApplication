@@ -5,5 +5,16 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h2>IndexAsync</h2>
+<h2>Google Contacts</h2>
+
+<ol>
+    @foreach (var item in Model.SelectMany(x => x.EmailAddresses))
+    {
+        <li>
+            @item.Value
+        </li>
+    }
+</ol>
+
+
 

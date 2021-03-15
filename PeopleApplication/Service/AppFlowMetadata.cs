@@ -17,7 +17,8 @@ namespace PeopleApplication.Service
                     ClientId = "< YOUR CLIENT ID >",
                     ClientSecret = "< YOUR CLIENT SECRETE >"
                 },
-                Scopes = new[] { PeopleServiceService.ScopeConstants.ContactsReadonly }
+                Scopes = new[] { PeopleServiceService.ScopeConstants.ContactsReadonly, 
+                    PeopleServiceService.ScopeConstants.ContactsOtherReadonly }
             });
 
         public override string GetUserId(Controller controller)
